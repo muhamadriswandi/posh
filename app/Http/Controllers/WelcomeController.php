@@ -96,11 +96,12 @@ class WelcomeController extends Controller
         return new StreamedResponse(function () use ($transactions) {
             $handle = fopen('php://output', 'w');
 
-            // Add BOM for Excel compatibility
+            // Add BOM and sep=; for Excel compatibility
             fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, "sep=;\n");
 
             // Header
-            fputcsv($handle, ['Tanggal', 'Keterangan', 'Jenis Penerimaan', 'Kanal Pembayaran', 'Nominal']);
+            fputcsv($handle, ['Tanggal', 'Keterangan', 'Jenis Penerimaan', 'Kanal Pembayaran', 'Nominal'], ';');
 
             foreach ($transactions as $tx) {
                 $types = $tx->items->map(fn($i) => $i->receiptType?->name)->filter()->unique()->join('; ');
@@ -110,7 +111,7 @@ class WelcomeController extends Controller
                     $types ?: 'Lainnya',
                     $tx->paymentChannel?->name ?? 'Cash',
                     $tx->amount
-                ]);
+                ], ';');
             }
 
             fclose($handle);

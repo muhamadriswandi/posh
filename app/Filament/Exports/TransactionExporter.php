@@ -16,7 +16,8 @@ class TransactionExporter extends Exporter
         return [
             ExportColumn::make('id')
                 ->label('ID'),
-            ExportColumn::make('date'),
+            ExportColumn::make('date')
+                ->label('Tanggal'),
             ExportColumn::make('bankAccount.name')
                 ->label('Account'),
             ExportColumn::make('description'),
@@ -30,8 +31,10 @@ class TransactionExporter extends Exporter
                     })->join('; ');
                 }),
             ExportColumn::make('amount')
-                ->formatStateUsing(fn($state) => number_format($state, 2)),
-            ExportColumn::make('type'),
+                ->label('Nominal')
+                ->getStateUsing(fn($record) => number_format($record->amount, 0, ',', '.')),
+            ExportColumn::make('type')
+                ->label('Tipe'),
             ExportColumn::make('paymentChannel.name')
                 ->label('Payment Channel'),
             ExportColumn::make('reference'),

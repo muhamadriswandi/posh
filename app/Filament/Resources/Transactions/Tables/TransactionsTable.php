@@ -131,9 +131,15 @@ class TransactionsTable
                         Notification::make()->title('Auto-categorization completed')->success()->send();
                     }),
                 ImportAction::make()
-                    ->importer(TransactionImporter::class),
+                    ->importer(TransactionImporter::class)
+                    ->csvDelimiter(';'),
                 ExportAction::make()
-                    ->exporter(TransactionExporter::class),
+                    ->exporter(TransactionExporter::class)
+                    ->csvDelimiter(';')
+                    ->formats([
+                        \Filament\Actions\Exports\Enums\ExportFormat::Xlsx,
+                        \Filament\Actions\Exports\Enums\ExportFormat::Csv,
+                    ]),
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('assign_receipt_type')

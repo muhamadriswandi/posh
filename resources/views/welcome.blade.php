@@ -37,7 +37,7 @@
 
         .marquee-content {
             display: inline-block;
-            animation: marquee 20s linear infinite;
+            animation: marquee 60s linear infinite;
         }
 
         @keyframes marquee {
@@ -50,11 +50,11 @@
             }
         }
 
-        /* Custom form styling for date inputs */
+        /* Custom form styling for date inputs
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(0.5);
             cursor: pointer;
-        }
+        } */
     </style>
 
     <!-- AlpineJS -->
@@ -195,6 +195,7 @@
                     <div class="p-6">
                         @foreach ($bankDetails as $bank)
                             <div x-show="activeTab === {{ $bank->id }}" x-cloak
+                                x-data="{ page: 1, perPage: 10, total: {{ $bank->transactions->count() }} }"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 translate-y-4">
                                 <div class="overflow-x-auto">
@@ -206,25 +207,21 @@
                                                     Tanggal</th>
                                                 <th
                                                     class="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                                    Keterangan</th>
-                                                <th
-                                                    class="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                                                    Jenis</th>
+                                                    Jenis Penerimaan</th>
                                                 <th
                                                     class="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 border-r-0">
-                                                    Kanal</th>
+                                                    Kanal Pembayaran</th>
                                                 <th
                                                     class="px-4 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 text-right">
-                                                    Jumlah</th>
+                                                    Jumlah (Rp)</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-50">
                                             @forelse($bank->transactions as $tx)
-                                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                                <tr class="hover:bg-slate-50/50 transition-colors"
+                                                    x-show="{{ $loop->index }} >= (page - 1) * perPage && {{ $loop->index }} < page * perPage">
                                                     <td class="px-4 py-4 text-sm text-slate-600 font-medium">
                                                         {{ $tx->date->format('d/m/Y') }}</td>
-                                                    <td class="px-4 py-4 text-sm text-slate-900 font-semibold">
-                                                        {{ $tx->description }}</td>
                                                     <td class="px-4 py-4 whitespace-nowrap">
                                                         @foreach ($tx->items->map(fn($i) => $i->receiptType?->name)->filter()->unique() as $type)
                                                             <span
@@ -236,7 +233,7 @@
                                                             class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">{{ $tx->paymentChannel?->name ?? 'Cash' }}</span>
                                                     </td>
                                                     <td class="px-4 py-4 text-sm font-bold text-slate-900 text-right">
-                                                        Rp {{ number_format($tx->amount, 0, ',', '.') }}</td>
+                                                         {{ number_format($tx->amount, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr>
@@ -248,6 +245,50 @@
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <!-- Pagination Controls -->
+                                <template x-if="total > perPage">
+                                    <div class="mt-8 flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div class="flex flex-1 justify-between sm:hidden">
+                                            <button @click="page--" :disabled="page <= 1"
+                                                class="relative inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-700 border border-slate-200 disabled:opacity-50">Previous</button>
+                                            <button @click="page++" :disabled="page * perPage >= total"
+                                                class="relative ml-3 inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-700 border border-slate-200 disabled:opacity-50">Next</button>
+                                        </div>
+                                        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                                            <div>
+                                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                                    Menampilkan <span class="font-bold text-slate-900" x-text="(page - 1) * perPage + 1"></span> sampai <span class="font-bold text-slate-900" x-text="Math.min(page * perPage, total)"></span> dari <span class="font-bold text-slate-900" x-text="total"></span> hasil
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <nav class="isolate inline-flex -space-x-px gap-2" aria-label="Pagination">
+                                                    <button @click="page--" :disabled="page <= 1"
+                                                        class="relative inline-flex items-center rounded-xl bg-white p-2 text-slate-400 hover:bg-slate-50 focus:z-20 disabled:opacity-50 transition-all border border-slate-200">
+                                                        <span class="sr-only">Previous</span>
+                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 01-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                    
+                                                    <div class="flex items-center gap-1 px-4">
+                                                        <span class="text-sm font-bold text-slate-900" x-text="page"></span>
+                                                        <span class="text-sm font-bold text-slate-400">/</span>
+                                                        <span class="text-sm font-bold text-slate-400" x-text="Math.ceil(total / perPage)"></span>
+                                                    </div>
+
+                                                    <button @click="page++" :disabled="page * perPage >= total"
+                                                        class="relative inline-flex items-center rounded-xl bg-white p-2 text-slate-400 hover:bg-slate-50 focus:z-20 disabled:opacity-50 transition-all border border-slate-200">
+                                                        <span class="sr-only">Next</span>
+                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                </nav>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         @endforeach
                     </div>
@@ -278,7 +319,8 @@
                                         <h2 class="text-2xl font-bold text-slate-900 uppercase tracking-tight">
                                             {{ $report['bank']->name }}</h2>
                                         <p class="text-slate-400 font-semibold">{{ $report['bank']->account_number }}
-                                            ({{ $report['bank']->bank_name }})</p>
+                                            ({{ $report['bank']->bank_name }})
+                                        </p>
                                     </div>
                                 </div>
 
