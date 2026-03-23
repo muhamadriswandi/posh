@@ -53,6 +53,11 @@ class TransactionsTable
                     ->badge()
                     ->color('warning')
                     ->placeholder('-'),
+                TextColumn::make('items.nama_opd')
+                    ->label('OPD')
+                    ->listWithLineBreaks()
+                    ->bulleted()
+                    ->searchable(),
                 TextColumn::make('reference')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -161,6 +166,22 @@ class TransactionsTable
                                 ->required(),
                         ])
                         ->action(fn(Collection $records, array $data) => $records->each->update(['payment_channel_id' => $data['payment_channel_id']])),
+                    BulkAction::make('assign_opd')
+                        ->schema([
+                            \Filament\Forms\Components\Select::make('opd_id')
+                                ->label('OPD')
+                                ->options(\App\Models\Opd::pluck('nama_opd', 'id'))
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $opd = \App\Models\Opd::find($data['opd_id']);
+                            $records->each(function ($transaction) use ($data, $opd) {
+                                $transaction->items()->update([
+                                    'opd_id' => $data['opd_id'],
+                                    'nama_opd' => $opd ? $opd->nama_opd : null,
+                                ]);
+                            });
+                        }),
                 ]),
             ]);
     }

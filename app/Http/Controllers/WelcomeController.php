@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Models\Opd;
+use App\Models\ReceiptType;
+use App\Models\PaymentChannel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -19,6 +22,7 @@ class WelcomeController extends Controller
     {
         $startDate = $request->query('start_date', date('Y-m-01'));
         $endDate = $request->query('end_date', date('Y-m-t'));
+        $selectedOpdId = $request->query('opd_id', 'all');
 
         // Scrolling text: Last Updated
         $lastUpdate = Transaction::latest('updated_at')->first()?->updated_at?->format('d M Y H:i') ?? '-';
@@ -66,6 +70,35 @@ class WelcomeController extends Controller
             ];
         }
 
+        // 3. OPD Pivot
+        $opdPivotQuery = DB::table('transaction_items')
+            ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+            ->select('transaction_items.receipt_type_id', 'transactions.payment_channel_id', DB::raw('SUM(transaction_items.amount) as total'))
+            ->where('transactions.type', 'credit')
+            ->whereBetween('transactions.date', [$startDate, $endDate])
+            ->whereNotNull('transaction_items.opd_id')
+            ->when($selectedOpdId !== 'all', function ($query) use ($selectedOpdId) {
+                return $query->where('transaction_items.opd_id', $selectedOpdId);
+            })
+            ->groupBy('transaction_items.receipt_type_id', 'transactions.payment_channel_id')
+            ->get();
+
+        $opdPivot = [];
+        foreach ($opdPivotQuery as $row) {
+            $opdPivot[$row->receipt_type_id][$row->payment_channel_id] = $row->total;
+        }
+
+        $opds = Opd::orderBy('nama_opd')->get();
+        $receiptTypes = ReceiptType::orderByRaw("CASE 
+            WHEN `group` = 'Pajak Daerah' THEN 1 
+            WHEN `group` = 'Retribusi Daerah' THEN 2 
+            WHEN `group` = 'Lain-lain PAD yang sah' THEN 3 
+            ELSE 4 END")
+            ->orderBy('code')
+            ->orderBy('name')
+            ->get();
+        $paymentChannels = PaymentChannel::orderBy('name')->get();
+
         return view('welcome', [
             'bankAccounts' => $bankAccounts,
             'bankDetails' => $bankDetails,
@@ -73,6 +106,11 @@ class WelcomeController extends Controller
             'lastUpdate' => $lastUpdate,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'opds' => $opds,
+            'receiptTypes' => $receiptTypes,
+            'paymentChannels' => $paymentChannels,
+            'opdPivot' => $opdPivot,
+            'selectedOpdId' => $selectedOpdId,
         ]);
     }
 

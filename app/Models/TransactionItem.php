@@ -11,6 +11,8 @@ class TransactionItem extends Model
         'description',
         'amount',
         'receipt_type_id',
+        'opd_id',
+        'nama_opd',
     ];
 
     public function transaction(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -21,5 +23,10 @@ class TransactionItem extends Model
     public function receiptType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(ReceiptType::class, 'receipt_type_id');
+    }
+
+    public function opd(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Opd::class);
     }
 }

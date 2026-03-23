@@ -94,6 +94,9 @@
                     <button @click="mainPage = 'laporan'"
                         :class="mainPage === 'laporan' ? 'text-orange-700 font-bold' : 'text-slate-500 hover:text-slate-900'"
                         class="text-sm transition-all">Laporan</button>
+                    <button @click="mainPage = 'opd'"
+                        :class="mainPage === 'opd' ? 'text-orange-700 font-bold' : 'text-slate-500 hover:text-slate-900'"
+                        class="text-sm transition-all">OPD</button>
                 </div>
             </div>
             <a href="{{ url('/admin/login') }}"
@@ -119,6 +122,18 @@
                 </div>
 
                 <form action="{{ route('home') }}" method="GET" class="flex flex-col md:flex-row items-end gap-4">
+                    <div class="flex-1 w-full">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Pilih
+                            OPD</label>
+                        <select name="opd_id"
+                            class="w-full bg-slate-50 border-none rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-orange-500 transition-all h-12 px-4 outline-none cursor-pointer">
+                            <option value="all" @selected($selectedOpdId === 'all')>Konsolidasi (Seluruh OPD)</option>
+                            @foreach ($opds as $opdData)
+                                <option value="{{ $opdData->id }}" @selected($selectedOpdId == $opdData->id)>
+                                    {{ $opdData->nama_opd }} {!! $opdData->singkatan ? " ({$opdData->singkatan})" : '' !!}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="flex-1 w-full">
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Dari
                             Tanggal</label>
@@ -147,8 +162,8 @@
                 <div class="mb-12">
                     <h1 class="text-4xl font-bold text-slate-900 mb-2">Monitoring Penerimaan</h1>
                     <p class="text-slate-500 text-lg">Periode: <span
-                            class="font-bold text-slate-900">{{ date('d M Y', strtotime($startDate)) }}</span> s/d <span
-                            class="font-bold text-slate-900">{{ date('d M Y', strtotime($endDate)) }}</span></p>
+                            class="font-bold text-slate-900">{{ date('d M Y', strtotime($startDate)) }}</span> s/d
+                        <span class="font-bold text-slate-900">{{ date('d M Y', strtotime($endDate)) }}</span></p>
                 </div>
 
                 <!-- Grid Lists -->
@@ -194,8 +209,7 @@
                     </div>
                     <div class="p-6">
                         @foreach ($bankDetails as $bank)
-                            <div x-show="activeTab === {{ $bank->id }}" x-cloak
-                                x-data="{ page: 1, perPage: 10, total: {{ $bank->transactions->count() }} }"
+                            <div x-show="activeTab === {{ $bank->id }}" x-cloak x-data="{ page: 1, perPage: 10, total: {{ $bank->transactions->count() }} }"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 translate-y-4">
                                 <div class="overflow-x-auto">
@@ -233,7 +247,7 @@
                                                             class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">{{ $tx->paymentChannel?->name ?? 'Cash' }}</span>
                                                     </td>
                                                     <td class="px-4 py-4 text-sm font-bold text-slate-900 text-right">
-                                                         {{ number_format($tx->amount, 0, ',', '.') }}</td>
+                                                        {{ number_format($tx->amount, 0, ',', '.') }}</td>
                                                 </tr>
                                             @empty
                                                 <tr>
@@ -248,7 +262,8 @@
 
                                 <!-- Pagination Controls -->
                                 <template x-if="total > perPage">
-                                    <div class="mt-8 flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div
+                                        class="mt-8 flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
                                         <div class="flex flex-1 justify-between sm:hidden">
                                             <button @click="page--" :disabled="page <= 1"
                                                 class="relative inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-700 border border-slate-200 disabled:opacity-50">Previous</button>
@@ -257,31 +272,45 @@
                                         </div>
                                         <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                                             <div>
-                                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                                    Menampilkan <span class="font-bold text-slate-900" x-text="(page - 1) * perPage + 1"></span> sampai <span class="font-bold text-slate-900" x-text="Math.min(page * perPage, total)"></span> dari <span class="font-bold text-slate-900" x-text="total"></span> hasil
+                                                <p
+                                                    class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                                    Menampilkan <span class="font-bold text-slate-900"
+                                                        x-text="(page - 1) * perPage + 1"></span> sampai <span
+                                                        class="font-bold text-slate-900"
+                                                        x-text="Math.min(page * perPage, total)"></span> dari <span
+                                                        class="font-bold text-slate-900" x-text="total"></span> hasil
                                                 </p>
                                             </div>
                                             <div>
-                                                <nav class="isolate inline-flex -space-x-px gap-2" aria-label="Pagination">
+                                                <nav class="isolate inline-flex -space-x-px gap-2"
+                                                    aria-label="Pagination">
                                                     <button @click="page--" :disabled="page <= 1"
                                                         class="relative inline-flex items-center rounded-xl bg-white p-2 text-slate-400 hover:bg-slate-50 focus:z-20 disabled:opacity-50 transition-all border border-slate-200">
                                                         <span class="sr-only">Previous</span>
-                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 01-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"
+                                                            aria-hidden="true">
+                                                            <path fill-rule="evenodd"
+                                                                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 01-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                                                                clip-rule="evenodd" />
                                                         </svg>
                                                     </button>
-                                                    
+
                                                     <div class="flex items-center gap-1 px-4">
-                                                        <span class="text-sm font-bold text-slate-900" x-text="page"></span>
+                                                        <span class="text-sm font-bold text-slate-900"
+                                                            x-text="page"></span>
                                                         <span class="text-sm font-bold text-slate-400">/</span>
-                                                        <span class="text-sm font-bold text-slate-400" x-text="Math.ceil(total / perPage)"></span>
+                                                        <span class="text-sm font-bold text-slate-400"
+                                                            x-text="Math.ceil(total / perPage)"></span>
                                                     </div>
 
                                                     <button @click="page++" :disabled="page * perPage >= total"
                                                         class="relative inline-flex items-center rounded-xl bg-white p-2 text-slate-400 hover:bg-slate-50 focus:z-20 disabled:opacity-50 transition-all border border-slate-200">
                                                         <span class="sr-only">Next</span>
-                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                                                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"
+                                                            aria-hidden="true">
+                                                            <path fill-rule="evenodd"
+                                                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                                                                clip-rule="evenodd" />
                                                         </svg>
                                                     </button>
                                                 </nav>
@@ -394,6 +423,130 @@
                     @endforeach
                 </div>
             </div>
+
+            <!-- Page 3: OPD -->
+            <div x-show="mainPage === 'opd'" x-cloak x-transition>
+                <div class="mb-12">
+                    <h1 class="text-4xl font-bold text-slate-900 mb-2">Penerimaan Berdasarkan OPD</h1>
+                    <p class="text-slate-500 text-lg">Periode: <span
+                            class="font-bold text-slate-900">{{ date('d M Y', strtotime($startDate)) }}</span> s/d
+                        <span class="font-bold text-slate-900">{{ date('d M Y', strtotime($endDate)) }}</span></p>
+                </div>
+
+                @php $activeOpd = $opds->firstWhere('id', $selectedOpdId); @endphp
+                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-100 bg-slate-50/50">
+                        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            {{ $selectedOpdId === 'all' ? 'Konsolidasi (Seluruh OPD)' : $activeOpd?->nama_opd }}
+                        </h2>
+                        @if ($selectedOpdId !== 'all' && $activeOpd && $activeOpd->singkatan)
+                            <p class="text-sm text-slate-500 mt-2 font-medium">{{ $activeOpd->singkatan }}</p>
+                        @endif
+                        @if (empty($opdPivot))
+                            <p class="text-sm text-slate-500 mt-4 italic">Belum ada data penerimaan untuk filter ini.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="overflow-x-auto p-6 md:p-8">
+                        <table class="w-full text-left border-separate border-spacing-0">
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 bg-white sticky left-0 z-10 w-64 shadow-[1px_0_0_0_#eaeaea]">
+                                        Jenis Penerimaan</th>
+                                    @foreach ($paymentChannels as $channel)
+                                        <th
+                                            class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 text-right whitespace-nowrap">
+                                            {{ $channel->name }} (Rp)</th>
+                                    @endforeach
+                                    <th
+                                        class="px-6 py-4 text-xs tracking-wider border-b border-slate-100 uppercase font-black text-slate-900 bg-slate-50 text-right whitespace-nowrap">
+                                        Total PENERIMAAN(Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                @php
+                                    $grandTotal = 0;
+                                    $colTotals = [];
+                                    $groupedReceiptTypes = $receiptTypes->groupBy('group');
+                                @endphp
+                                @foreach ($groupedReceiptTypes as $groupName => $types)
+                                    @php
+                                        $groupRowTotal = 0;
+                                        $groupColTotals = [];
+                                        foreach ($types as $type) {
+                                            foreach ($paymentChannels as $channel) {
+                                                $val = $opdPivot[$type->id][$channel->id] ?? 0;
+                                                $groupColTotals[$channel->id] = ($groupColTotals[$channel->id] ?? 0) + $val;
+                                                $groupRowTotal += $val;
+                                            }
+                                        }
+                                    @endphp
+                                    <tr class="bg-indigo-50/50">
+                                        <td class="px-6 py-3 text-xs font-black text-indigo-900 uppercase tracking-widest sticky left-0 z-10 shadow-[1px_0_0_0_#eaeaea]">
+                                            {{ $groupName ?: 'Belum Ada Grup' }}
+                                        </td>
+                                        @foreach ($paymentChannels as $channel)
+                                            <td class="px-6 py-3 text-sm font-bold text-indigo-700 text-right">
+                                                {{ ($groupColTotals[$channel->id] ?? 0) > 0 ? number_format($groupColTotals[$channel->id], 0, ',', '.') : '-' }}
+                                            </td>
+                                        @endforeach
+                                        <td class="px-6 py-3 text-sm font-black text-indigo-900 text-right border-l border-indigo-100/50">
+                                            {{ number_format($groupRowTotal, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                    @foreach ($types as $type)
+                                        @php $rowTotal = 0; @endphp
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td
+                                                class="px-6 py-4 text-sm font-semibold text-slate-700 bg-white sticky left-0 z-10 shadow-[1px_0_0_0_#eaeaea] pl-10 border-l-4 border-l-indigo-300">
+                                                {{ $type->name }}</td>
+                                            @foreach ($paymentChannels as $channel)
+                                                @php
+                                                    $val = $opdPivot[$type->id][$channel->id] ?? 0;
+                                                    $rowTotal += $val;
+                                                    $colTotals[$channel->id] = ($colTotals[$channel->id] ?? 0) + $val;
+                                                @endphp
+                                                <td class="px-6 py-4 text-sm text-slate-600 text-right">
+                                                    {{ $val > 0 ? number_format($val, 0, ',', '.') : '-' }}</td>
+                                            @endforeach
+                                            <td class="px-6 py-4 text-sm font-bold text-slate-900 bg-slate-50 text-right">
+                                                @php $grandTotal += $rowTotal; @endphp
+                                                {{ number_format($rowTotal, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td
+                                        class="px-6 py-4 text-sm font-black text-slate-900 bg-white border-t border-slate-200 sticky left-0 z-10 shadow-[1px_0_0_0_#eaeaea]">
+                                        TOTAL PER KANAL</td>
+                                    @foreach ($paymentChannels as $channel)
+                                        <td
+                                            class="px-6 py-4 text-sm font-bold text-orange-700 border-t border-slate-200 text-right">
+                                            {{ ($colTotals[$channel->id] ?? 0) > 0 ? number_format($colTotals[$channel->id] ?? 0, 0, ',', '.') : '-' }}
+                                        </td>
+                                    @endforeach
+                                    <td
+                                        class="px-6 py-4 text-base tracking-wider font-black text-orange-700 bg-orange-50/50 border-t border-slate-200 shadow-inner text-right">
+                                        {{ number_format($grandTotal, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <footer class="mt-24 border-t border-slate-100 py-12 px-6">
@@ -404,6 +557,8 @@
                         class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-orange-700">Monitoring</button>
                     <button @click="mainPage = 'laporan'"
                         class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-orange-700">Laporan</button>
+                    <button @click="mainPage = 'opd'"
+                        class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-orange-700">OPD</button>
                 </div>
             </div>
         </footer>

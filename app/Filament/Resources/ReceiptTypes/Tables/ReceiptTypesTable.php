@@ -23,7 +23,8 @@ class ReceiptTypesTable
                     ->sortable()
                     ->badge(),
                 TextColumn::make('code')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('keywords')
                     ->badge()
                     ->limitList(3),
@@ -36,8 +37,15 @@ class ReceiptTypesTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('code')
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('group')
+                    ->options(fn (): array => \App\Models\ReceiptType::select('group')
+                        ->whereNotNull('group')
+                        ->distinct()
+                        ->pluck('group', 'group')
+                        ->toArray()
+                    ),
             ])
             ->recordActions([
                 ViewAction::make(),

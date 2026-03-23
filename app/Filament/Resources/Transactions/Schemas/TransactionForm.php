@@ -75,6 +75,10 @@ class TransactionForm
                             ->searchable()
                             ->preload()
                             ->placeholder('Receipt Type'),
+                        Select::make('opd_id')
+                            ->label('OPD')
+                            ->options(\App\Models\Opd::pluck('nama_opd', 'id'))
+                            ->required(),
                     ])
                     ->columnSpanFull()
                     ->columns(4),
